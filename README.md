@@ -1,2 +1,2 @@
-# AGI-CA-
-Artificial General Intelligence Containment Axiom 
+# AGI-CP
+Artificial General Intelligence Containment Protocol   
