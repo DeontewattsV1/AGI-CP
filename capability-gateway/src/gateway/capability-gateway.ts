@@ -79,7 +79,11 @@ export async function authorizeCapability(
     if (!deps.revocationStore) {
       return deny("REVOCATION_CONTROL_MISSING", envelope, capability.id);
     }
-    const ids = [envelope.requestId, envelope.delegationId, envelope.issuer, envelope.subject].filter(Boolean);
+    const lineage = deps.revocationStore as { registerLineage?: (id: string, parent?: string) => void };
+    if (ctx.delegation && lineage.registerLineage) {
+      lineage.registerLineage(ctx.delegation.id, ctx.delegation.parentId);
+    }
+    const ids = [envelope.requestId, envelope.delegationId, envelope.issuer, envelope.subject, ctx.delegation?.parentId].filter(Boolean) as string[];
     for (const id of ids) {
       if (await deps.revocationStore.isRevoked(id)) {
         return deny("REVOKED", envelope, capability.id);
@@ -93,7 +97,6 @@ export async function authorizeCapability(
     if (await deps.replayStore.seen(envelope.requestId, envelope.nonce)) {
       return deny("REPLAY_DETECTED", envelope, capability.id);
     }
-    await deps.replayStore.remember(envelope.requestId, envelope.nonce);
   }
   const d = validateDelegation(ctx.delegation, envelope, capability, ctx.requestedScope);
   if (d !== "ok") {
@@ -133,6 +136,9 @@ export async function authorizeCapability(
         capabilityId: capability.id,
       };
     }
+  }
+  if (capability.requiresReplayProtection && deps.replayStore) {
+    await deps.replayStore.remember(envelope.requestId, envelope.nonce);
   }
   return {
     decision: "ALLOW",
