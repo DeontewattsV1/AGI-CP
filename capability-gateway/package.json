@@ -8,7 +8,7 @@
     "build": "tsc --noEmit",
     "start": "AGICP_START=1 node --experimental-strip-types src/index.ts",
     "dev": "AGICP_START=1 node --experimental-strip-types src/index.ts",
-    "test": "node --experimental-strip-types --test test/security-boundary.node-test.ts"
+    "test": "node --experimental-strip-types --test test/*.node-test.ts"
   },
   "dependencies": {
     "fastify": "^5.0.0"
