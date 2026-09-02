@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AGI-CP — Containment Protocol</title>
+  <meta name="description" content="Fail-closed capability authorization for agentic systems. Research standard. Not a claim of AGI containment." />
+  <link rel="icon" href="assets/mark.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/surface.css" />
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="top">
+    <a class="brand" href="./">
+      <img src="assets/mark.svg" width="36" height="36" alt="" />
+      <span>AGI-CP</span>
+    </a>
+    <nav>
+      <a href="#gate">Gate</a>
+      <a href="#claims">Claims</a>
+      <a href="https://github.com/DeontewattsV1/AGI-CP">Source</a>
+    </nav>
+  </header>
+  <main id="main">
+    <section class="hero">
+      <p class="kicker">Research standard · v0.2 errata</p>
+      <h1 class="fx-glitch" data-text="AGI-CP">AGI-CP</h1>
+      <p class="lede">
+        Capability is not authority. Observation is not authorization.
+        Permission at <em>t</em> is not permission at <em>t + Δt</em>.
+      </p>
+      <p class="formula">ALLOW ⇔ I ∧ K ∧ S ∧ D ∧ A ∧ T ∧ R ∧ P</p>
+      <p class="note">DENY and INDETERMINATE never become ALLOW. This site does not claim containment of arbitrary AGI.</p>
+    </section>
+    <section id="gate" class="gate-section">
+      <div class="copy">
+        <h2>Enforcement plane</h2>
+        <p>
+          Five roles stay split. Move the pointer across the mesh.
+          The cluster looks toward input; the gate stays closed until every conjunct holds.
+        </p>
+        <ul class="roles">
+          <li><b>O</b> Observer — evidence only</li>
+          <li><b>J</b> Judge — DENY / HOLD / ALLOW</li>
+          <li><b>U</b> Issuer — scoped tokens</li>
+          <li><b>E</b> Enforcer — the live gate</li>
+          <li><b>R</b> Recorder — tamper-evident log</li>
+        </ul>
+        <p class="driver">oil-motion driver: pointer · continuous · damping look-at</p>
+      </div>
+      <div class="stage" id="stage" aria-label="Role mesh. Pointer tilts the diagram.">
+        <div class="mesh" id="mesh">
+          <div class="node" data-role="O" style="--i:0">O</div>
+          <div class="node" data-role="J" style="--i:1">J</div>
+          <div class="node" data-role="U" style="--i:2">U</div>
+          <div class="node" data-role="E" style="--i:3">E</div>
+          <div class="node" data-role="R" style="--i:4">R</div>
+          <div class="hub" id="hub" data-state="CLOSED">CLOSED</div>
+        </div>
+      </div>
+    </section>
+    <section id="claims" class="claims">
+      <h2>Claim hierarchy</h2>
+      <ol>
+        <li>Protocol invariant</li>
+        <li>Reference implementation property</li>
+        <li>Deployment assumption</li>
+        <li>Empirical security claim</li>
+      </ol>
+      <p>A passing test suite lives on layer 2. It does not migrate upward by itself.</p>
+    </section>
+  </main>
+  <footer>
+    <p>Sources: Colorion text effects (glitch), oil-motion pointer pipeline, original mark. MIT protocol text.</p>
+    <p><a href="https://github.com/DeontewattsV1/AGI-CP">github.com/DeontewattsV1/AGI-CP</a></p>
+  </footer>
+  <script src="assets/gate-motion.js"></script>
+</body>
+</html>
