@@ -1,0 +1,31 @@
+name: TRACT Runtime
+
+on:
+  pull_request:
+    paths:
+      - "tract/runtime/**"
+      - ".github/workflows/tract-runtime.yml"
+  push:
+    branches: [main]
+    paths:
+      - "tract/runtime/**"
+
+permissions:
+  contents: read
+
+jobs:
+  runtime-conformance:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: tract/runtime
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: tract/runtime/package-lock.json
+      - run: npm install --package-lock-only
+      - run: npm ci
+      - run: npm test
