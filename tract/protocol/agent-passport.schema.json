@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://goodshyt.group/schemas/tract/agent-passport.schema.json",
+  "title": "TRACT Agent Passport",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "tract_version",
+    "subject",
+    "purpose",
+    "capabilities",
+    "resources",
+    "delegation",
+    "network",
+    "issued_at",
+    "expires_at",
+    "nonce",
+    "issuer",
+    "signature"
+  ],
+  "properties": {
+    "tract_version": { "const": "0.1" },
+    "subject": { "type": "string", "minLength": 1 },
+    "parent": { "type": ["string", "null"] },
+    "model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider", "model"],
+      "properties": {
+        "provider": { "type": "string", "minLength": 1 },
+        "model": { "type": "string", "minLength": 1 }
+      }
+    },
+    "purpose": { "type": "string", "minLength": 1 },
+    "capabilities": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "prohibited": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true,
+      "default": []
+    },
+    "resources": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "delegation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["allowed", "maximum_depth", "maximum_children"],
+      "properties": {
+        "allowed": { "type": "boolean" },
+        "maximum_depth": { "type": "integer", "minimum": 0 },
+        "maximum_children": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "network": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["default", "allow"],
+      "properties": {
+        "default": { "enum": ["deny", "allow"] },
+        "allow": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        }
+      }
+    },
+    "issued_at": { "type": "string", "format": "date-time" },
+    "expires_at": { "type": "string", "format": "date-time" },
+    "nonce": { "type": "string", "minLength": 8 },
+    "issuer": { "type": "string", "minLength": 1 },
+    "signature": { "type": "string", "minLength": 1 }
+  }
+}
