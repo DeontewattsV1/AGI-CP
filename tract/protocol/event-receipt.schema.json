@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://goodshyt.group/schemas/tract/event-receipt.schema.json",
+  "title": "TRACT Event Receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["event_id","trace_id","agent_id","action","authorization","risk","previous_event_hash","event_hash","timestamp","signature"],
+  "properties": {
+    "event_id": {"type":"string","minLength":1},
+    "trace_id": {"type":"string","minLength":1},
+    "agent_id": {"type":"string","minLength":1},
+    "parent_agent_id": {"type":["string","null"]},
+    "action": {
+      "type":"object",
+      "additionalProperties": false,
+      "required":["type","resource","arguments_digest"],
+      "properties": {
+        "type":{"type":"string","minLength":1},
+        "resource":{"type":"string","minLength":1},
+        "arguments_digest":{"type":"string","pattern":"^sha256:[a-fA-F0-9]{64}$"}
+      }
+    },
+    "authorization": {
+      "type":"object",
+      "additionalProperties": false,
+      "required":["capability","decision","policy"],
+      "properties": {
+        "capability":{"type":"string","minLength":1},
+        "decision":{"enum":["ALLOW","DENY","HOLD"]},
+        "policy":{"type":"string","minLength":1}
+      }
+    },
+    "risk": {
+      "type":"object",
+      "additionalProperties": false,
+      "required":["score","classification"],
+      "properties": {
+        "score":{"type":"number","minimum":0,"maximum":1},
+        "classification":{"enum":["NORMAL","OBSERVE","RESTRICT","QUARANTINE","TERMINATE"]}
+      }
+    },
+    "previous_event_hash":{"type":"string","pattern":"^sha256:[a-fA-F0-9]{64}$"},
+    "event_hash":{"type":"string","pattern":"^sha256:[a-fA-F0-9]{64}$"},
+    "timestamp":{"type":"string","format":"date-time"},
+    "signature":{"type":"string","minLength":1}
+  }
+}
