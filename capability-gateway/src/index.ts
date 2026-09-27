@@ -1,5 +1,6 @@
 export { authorizeCapability } from "./gateway/capability-gateway.ts";
 export { signEnvelope, verifySignature } from "./auth/signature.ts";
+export { makeCapabilityRequest, verifyCapabilityRequest } from "./auth/capability-request.ts";
 export { MemoryReplayStore } from "./auth/replay.ts";
 export { MemoryRevocationStore } from "./auth/revocation.ts";
 export { getCapability, listCapabilities } from "./capabilities/registry.ts";
