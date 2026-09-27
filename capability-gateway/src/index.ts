@@ -3,6 +3,7 @@ export { signEnvelope, verifySignature } from "./auth/signature.ts";
 export { makeCapabilityRequest, verifyCapabilityRequest } from "./auth/capability-request.ts";
 export { evaluateIssuerPolicy, issuerEvaluation } from "./auth/issuer-policy.ts";
 export { collectEvidence, decideEvidence } from "./auth/evidence.ts";
+export { makeIssuerProof, verifyIssuerProof } from "./auth/issuer-proof.ts";
 export { MemoryReplayStore } from "./auth/replay.ts";
 export { MemoryRevocationStore } from "./auth/revocation.ts";
 export { getCapability, listCapabilities } from "./capabilities/registry.ts";
