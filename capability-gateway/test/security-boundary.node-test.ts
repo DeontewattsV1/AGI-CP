@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { authorizeCapability } from "../src/gateway/capability-gateway.ts";
 import { signEnvelope } from "../src/auth/signature.ts";
+import { makeCapabilityRequest } from "../src/auth/capability-request.ts";
 import { MemoryReplayStore } from "../src/auth/replay.ts";
 import { MemoryRevocationStore } from "../src/auth/revocation.ts";
 import { getCapability } from "../src/capabilities/registry.ts";
@@ -9,6 +10,7 @@ import { combineDecisions } from "../src/capabilities/policy.ts";
 import type { Delegation, SignedRequestEnvelope } from "../src/capabilities/types.ts";
 
 const SECRET = "test-issuer-secret";
+const AGENT = "test-agent-secret";
 const now = Date.now();
 
 function cap(id = "agicp.tool.bounded") {
@@ -57,6 +59,15 @@ async function authorize(over: Record<string, unknown> = {}) {
       issuerRole: (over.issuerRole as "ISSUER") ?? "ISSUER",
       delegation: ("delegation" in over ? over.delegation : delegation()) as Delegation | null,
       capability: ("capability" in over ? over.capability : cap()) as ReturnType<typeof cap> | null,
+      capabilityRequest: ("capabilityRequest" in over ? over.capabilityRequest : makeCapabilityRequest({
+        request_id: ((over.envelope as SignedRequestEnvelope) ?? envelope()).requestId,
+        subject: ((over.envelope as SignedRequestEnvelope) ?? envelope()).subject || "agent-A17",
+        capability: ((over.envelope as SignedRequestEnvelope) ?? envelope()).capability || "agicp.tool.bounded",
+        timestamp: now,
+        nonce: "agent-req-nonce",
+        signer_role: "AGENT",
+      }, AGENT)) as never,
+      agentKey: (over.agentKey as string | undefined) ?? AGENT,
       requestedScope: (over.requestedScope as string) ?? "tool:bounded:write",
       now,
       deploymentAttestation: (over.deploymentAttestation as never) ?? null,
