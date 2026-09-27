@@ -31,7 +31,9 @@ export type DenyReason =
   | "POLICY_NOT_REEVALUATED"
   | "ISSUER_SIGNATURE_ORACLE"
   | "POLICY_DENIED"
-  | "POLICY_VERSION_MISMATCH";
+  | "POLICY_VERSION_MISMATCH"
+  | "EVIDENCE_FAILED"
+  | "EVIDENCE_UNVERIFIABLE";
 
 export interface Capability {
   id: string;
