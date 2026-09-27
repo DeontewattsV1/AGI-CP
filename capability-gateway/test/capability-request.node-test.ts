@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import { authorizeCapability } from "../src/gateway/capability-gateway.ts";
 import { signEnvelope } from "../src/auth/signature.ts";
 import { makeCapabilityRequest } from "../src/auth/capability-request.ts";
+import { issuerEvaluation } from "../src/auth/issuer-policy.ts";
 import { MemoryReplayStore } from "../src/auth/replay.ts";
 import { MemoryRevocationStore } from "../src/auth/revocation.ts";
 import { getCapability } from "../src/capabilities/registry.ts";
@@ -61,77 +62,66 @@ function deps() {
 
 describe("signed CAPABILITY_REQUEST", () => {
   it("ALLOW when agent-signed request matches subject", async () => {
-    const result = await authorizeCapability(
-      {
-        envelope: envelope(),
-        resolvedKey: ISSUER,
-        issuerRole: "ISSUER",
-        agentKey: AGENT,
-        capabilityRequest: request(),
-        delegation: delegation(),
-        capability: getCapability("agicp.tool.bounded")!,
-        requestedScope: "tool:bounded:write",
-        now,
-      },
-      deps(),
-    );
+    const result = await authorizeCapability({
+      envelope: envelope(),
+      resolvedKey: ISSUER,
+      issuerRole: "ISSUER",
+      agentKey: AGENT,
+      policySnapshot: issuerEvaluation(now),
+      capabilityRequest: request(),
+      delegation: delegation(),
+      capability: getCapability("agicp.tool.bounded")!,
+      requestedScope: "tool:bounded:write",
+      now,
+    }, deps());
     assert.equal(result.decision, "ALLOW");
   });
-
   it("missing request => DENY CAPABILITY_REQUEST_MISSING", async () => {
-    const result = await authorizeCapability(
-      {
-        envelope: envelope(),
-        resolvedKey: ISSUER,
-        issuerRole: "ISSUER",
-        agentKey: AGENT,
-        capabilityRequest: null,
-        delegation: delegation(),
-        capability: getCapability("agicp.tool.bounded")!,
-        requestedScope: "tool:bounded:write",
-        now,
-      },
-      deps(),
-    );
+    const result = await authorizeCapability({
+      envelope: envelope(),
+      resolvedKey: ISSUER,
+      issuerRole: "ISSUER",
+      agentKey: AGENT,
+      policySnapshot: issuerEvaluation(now),
+      capabilityRequest: null,
+      delegation: delegation(),
+      capability: getCapability("agicp.tool.bounded")!,
+      requestedScope: "tool:bounded:write",
+      now,
+    }, deps());
     assert.equal(result.decision, "DENY");
     assert.equal(result.reason, "CAPABILITY_REQUEST_MISSING");
   });
-
   it("observer-signed request => DENY", async () => {
     const forged = { ...request(), signer_role: "OBSERVER" as unknown as "AGENT" };
-    const result = await authorizeCapability(
-      {
-        envelope: envelope(),
-        resolvedKey: ISSUER,
-        issuerRole: "ISSUER",
-        agentKey: AGENT,
-        capabilityRequest: forged,
-        delegation: delegation(),
-        capability: getCapability("agicp.tool.bounded")!,
-        requestedScope: "tool:bounded:write",
-        now,
-      },
-      deps(),
-    );
+    const result = await authorizeCapability({
+      envelope: envelope(),
+      resolvedKey: ISSUER,
+      issuerRole: "ISSUER",
+      agentKey: AGENT,
+      policySnapshot: issuerEvaluation(now),
+      capabilityRequest: forged,
+      delegation: delegation(),
+      capability: getCapability("agicp.tool.bounded")!,
+      requestedScope: "tool:bounded:write",
+      now,
+    }, deps());
     assert.equal(result.decision, "DENY");
     assert.equal(result.reason, "CAPABILITY_REQUEST_OBSERVER_SIGNED");
   });
-
   it("wrong subject => DENY CAPABILITY_REQUEST_SUBJECT_MISMATCH", async () => {
-    const result = await authorizeCapability(
-      {
-        envelope: envelope(),
-        resolvedKey: ISSUER,
-        issuerRole: "ISSUER",
-        agentKey: AGENT,
-        capabilityRequest: request({ subject: "other-agent" }),
-        delegation: delegation(),
-        capability: getCapability("agicp.tool.bounded")!,
-        requestedScope: "tool:bounded:write",
-        now,
-      },
-      deps(),
-    );
+    const result = await authorizeCapability({
+      envelope: envelope(),
+      resolvedKey: ISSUER,
+      issuerRole: "ISSUER",
+      agentKey: AGENT,
+      policySnapshot: issuerEvaluation(now),
+      capabilityRequest: request({ subject: "other-agent" }),
+      delegation: delegation(),
+      capability: getCapability("agicp.tool.bounded")!,
+      requestedScope: "tool:bounded:write",
+      now,
+    }, deps());
     assert.equal(result.decision, "DENY");
     assert.equal(result.reason, "CAPABILITY_REQUEST_SUBJECT_MISMATCH");
   });
