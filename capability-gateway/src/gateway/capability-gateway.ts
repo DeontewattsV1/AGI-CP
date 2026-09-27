@@ -7,6 +7,11 @@ import {
   verifyCapabilityRequest,
   type CapabilityRequest,
 } from "../auth/capability-request.ts";
+import {
+  evaluateIssuerPolicy,
+  type ImportedAdjudication,
+  type PolicySnapshot,
+} from "../auth/issuer-policy.ts";
 import type {
   Capability,
   CapabilityDecision,
@@ -24,6 +29,8 @@ export interface VerificationContext {
   issuerRole?: Role;
   agentKey?: string | null;
   capabilityRequest?: CapabilityRequest | null;
+  policySnapshot?: PolicySnapshot | null;
+  importedAdjudication?: ImportedAdjudication | null;
   delegation?: Delegation | null;
   capability?: Capability | null;
   requestedScope?: string;
@@ -88,6 +95,16 @@ export async function authorizeCapability(
     }
     if (!verifySignature(envelope, ctx.resolvedKey)) {
       return deny("INVALID_SIGNATURE", envelope, capability.id);
+    }
+    const policy = evaluateIssuerPolicy({
+      capability,
+      requestedScope: ctx.requestedScope,
+      now,
+      snapshot: ctx.policySnapshot,
+      importedAdjudication: ctx.importedAdjudication,
+    });
+    if (policy !== "ok") {
+      return deny(policy, envelope, capability.id);
     }
   }
   if (Math.abs(now - envelope.timestamp) > skew) {
