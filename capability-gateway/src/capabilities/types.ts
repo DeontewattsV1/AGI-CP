@@ -33,7 +33,10 @@ export type DenyReason =
   | "POLICY_DENIED"
   | "POLICY_VERSION_MISMATCH"
   | "EVIDENCE_FAILED"
-  | "EVIDENCE_UNVERIFIABLE";
+  | "EVIDENCE_UNVERIFIABLE"
+  | "ISSUER_PROOF_MISSING"
+  | "ISSUER_PROOF_OBSERVER"
+  | "ISSUER_PROOF_INVALID";
 
 export interface Capability {
   id: string;
