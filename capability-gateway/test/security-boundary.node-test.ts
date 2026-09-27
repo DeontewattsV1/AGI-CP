@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import { authorizeCapability } from "../src/gateway/capability-gateway.ts";
 import { signEnvelope } from "../src/auth/signature.ts";
 import { makeCapabilityRequest } from "../src/auth/capability-request.ts";
+import { issuerEvaluation } from "../src/auth/issuer-policy.ts";
 import { MemoryReplayStore } from "../src/auth/replay.ts";
 import { MemoryRevocationStore } from "../src/auth/revocation.ts";
 import { getCapability } from "../src/capabilities/registry.ts";
@@ -68,6 +69,8 @@ async function authorize(over: Record<string, unknown> = {}) {
         signer_role: "AGENT",
       }, AGENT)) as never,
       agentKey: (over.agentKey as string | undefined) ?? AGENT,
+      policySnapshot: ("policySnapshot" in over ? over.policySnapshot : issuerEvaluation(now)) as never,
+      importedAdjudication: ("importedAdjudication" in over ? over.importedAdjudication : null) as never,
       requestedScope: (over.requestedScope as string) ?? "tool:bounded:write",
       now,
       deploymentAttestation: (over.deploymentAttestation as never) ?? null,

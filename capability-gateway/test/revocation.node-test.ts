@@ -4,6 +4,7 @@ import { MemoryRevocationStore, revocationMessage } from "../src/auth/revocation
 import { authorizeCapability } from "../src/gateway/capability-gateway.ts";
 import { signEnvelope } from "../src/auth/signature.ts";
 import { makeCapabilityRequest } from "../src/auth/capability-request.ts";
+import { issuerEvaluation } from "../src/auth/issuer-policy.ts";
 import { MemoryReplayStore } from "../src/auth/replay.ts";
 import { getCapability } from "../src/capabilities/registry.ts";
 import type { Delegation, SignedRequestEnvelope } from "../src/capabilities/types.ts";
@@ -88,6 +89,7 @@ describe("REVOCATION lineage", () => {
       capability: getCapability("agicp.tool.bounded")!,
       requestedScope: "tool:bounded:write",
       agentKey: AGENT,
+      policySnapshot: issuerEvaluation(now),
       capabilityRequest: agentRequest(envelope()),
       now,
     }, { replayStore: new MemoryReplayStore(), revocationStore });
@@ -106,6 +108,7 @@ describe("REVOCATION lineage", () => {
       capability: getCapability("agicp.tool.bounded")!,
       requestedScope: "tool:bounded:write",
       agentKey: AGENT,
+      policySnapshot: issuerEvaluation(now),
       capabilityRequest: agentRequest(envelope({ requestId: "req-retry", nonce: "n-retry" })),
       now,
     }, { replayStore, revocationStore });
@@ -118,6 +121,7 @@ describe("REVOCATION lineage", () => {
       capability: getCapability("agicp.tool.bounded")!,
       requestedScope: "tool:bounded:write",
       agentKey: AGENT,
+      policySnapshot: issuerEvaluation(now),
       capabilityRequest: agentRequest(envelope({ requestId: "req-retry", nonce: "n-retry" })),
       now,
     }, { replayStore, revocationStore });
