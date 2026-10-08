@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { MemoryRevocationStore, revocationMessage } from "../src/auth/revocation.ts";
 import { authorizeCapability } from "../src/gateway/capability-gateway.ts";
+import { issuerEvaluation } from "../src/auth/issuer-policy.ts";
 import { signEnvelope } from "../src/auth/signature.ts";
 import { makeCapabilityRequest } from "../src/auth/capability-request.ts";
 import { MemoryReplayStore } from "../src/auth/replay.ts";
@@ -89,6 +90,7 @@ describe("REVOCATION lineage", () => {
       requestedScope: "tool:bounded:write",
       agentKey: AGENT,
       capabilityRequest: agentRequest(envelope()),
+      policySnapshot: issuerEvaluation(now),
       now,
     }, { replayStore: new MemoryReplayStore(), revocationStore });
     assert.equal(result.decision, "DENY");
@@ -107,6 +109,7 @@ describe("REVOCATION lineage", () => {
       requestedScope: "tool:bounded:write",
       agentKey: AGENT,
       capabilityRequest: agentRequest(envelope({ requestId: "req-retry", nonce: "n-retry" })),
+      policySnapshot: issuerEvaluation(now),
       now,
     }, { replayStore, revocationStore });
     assert.equal(denied.decision, "DENY");
@@ -119,6 +122,7 @@ describe("REVOCATION lineage", () => {
       requestedScope: "tool:bounded:write",
       agentKey: AGENT,
       capabilityRequest: agentRequest(envelope({ requestId: "req-retry", nonce: "n-retry" })),
+      policySnapshot: issuerEvaluation(now),
       now,
     }, { replayStore, revocationStore });
     assert.equal(allowed.decision, "ALLOW");

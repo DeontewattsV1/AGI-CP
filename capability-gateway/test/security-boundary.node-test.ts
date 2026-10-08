@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { authorizeCapability } from "../src/gateway/capability-gateway.ts";
+import { issuerEvaluation } from "../src/auth/issuer-policy.ts";
 import { signEnvelope } from "../src/auth/signature.ts";
 import { makeCapabilityRequest } from "../src/auth/capability-request.ts";
 import { MemoryReplayStore } from "../src/auth/replay.ts";
@@ -69,6 +70,7 @@ async function authorize(over: Record<string, unknown> = {}) {
       }, AGENT)) as never,
       agentKey: (over.agentKey as string | undefined) ?? AGENT,
       requestedScope: (over.requestedScope as string) ?? "tool:bounded:write",
+      policySnapshot: issuerEvaluation(now),
       now,
       deploymentAttestation: (over.deploymentAttestation as never) ?? null,
       extraVerifier: over.extraVerifier as undefined | (() => "ALLOW" | "DENY" | "INDETERMINATE"),
