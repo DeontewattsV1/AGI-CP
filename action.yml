@@ -1,24 +1,43 @@
-name: Publish PR Conductor v2.0.0
+cat << 'EOF' > /tmp/release-notes.md
+Highlights:
+policy-driven squash, rebase, and merge-commit selection
+branch update/rebase automation
+native GitHub stacked-PR handling through github/gh-stack
+fork-aware safety controls
+Conventional Commit title normalization
+one upserted PR status comment
+dry-run mode
+protected immediate-merge fallback when repository auto-merge is unavailable
+root action.yml integrity validation
+live-mode canary verified before release
+The release tag targets the validated v2 branch SHA.
+EOF
 
-on:
-  push:
-    branches: [main]
-
-permissions:
-  contents: write
-
-jobs:
-  release:
+gh release create v2.0.0 \
+  --repo "$GITHUB_REPOSITORY" \
+  --target "$TARGET_SHA" \
+  --title "PR Conductor v2.0.0" \
+  --notes-file /tmp/release-notes.md \
+  --latestname: Publish PR Conductor v2.0.0
+      INPUT_NAME: ${{ inputs.name }}
+    entrypoint: 'sh'
+    args:
+-c
+|
+        GREETING="Hello $INPUT_NAME"
+        echo "$GREETING"
+        echo "greeting=$GREETING" >> $GITHUB_OUTPUT
+  
     if: "${{ github.event.head_commit.message == 'release: publish v2.0.0' }}"
     runs-on: ubuntu-latest
-    steps:
-      - name: Check out validated v2
+    steps: 
+name: Check out validated v2
         uses: actions/checkout@v5
         with:
           ref: v2
           fetch-depth: 0
 
-      - name: Revalidate release target
+name: Revalidate release target
         run: |
           set -Eeuo pipefail
           test -f action.yml
@@ -34,7 +53,7 @@ jobs:
             echo "Legacy shell backticks are forbidden in the runtime engine."
             exit 1
           fi
-      - name: Publish immutable v2.0.0 release
+name: Publish immutable v2.0.0 release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -48,16 +67,16 @@ jobs:
           # PR Conductor v2.0.0
           First immutable PR Conductor v2 release.
           Highlights:
-          - policy-driven squash, rebase, and merge-commit selection
-          - branch update/rebase automation
-          - native GitHub stacked-PR handling through github/gh-stack
-          - fork-aware safety controls
-          - Conventional Commit title normalization
-          - one upserted PR status comment
-          - dry-run mode
-          - protected immediate-merge fallback when repository auto-merge is unavailable
-          - root action.yml integrity validation
-          - live-mode canary verified before release
+policy-driven squash, rebase, and merge-commit selection
+branch update/rebase automation
+native GitHub stacked-PR handling through github/gh-stack
+fork-aware safety controls
+Conventional Commit title normalization
+one upserted PR status comment
+dry-run mode
+protected immediate-merge fallback when repository auto-merge is unavailable
+root action.yml integrity validation
+live-mode canary verified before release
           The release tag targets the validated v2 branch SHA.
           EOF
           gh release create v2.0.0 \
