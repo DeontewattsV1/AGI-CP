@@ -1,0 +1,35 @@
+name: TRACT Console
+
+on:
+  pull_request:
+    paths:
+      - "tract/console/**"
+      - ".github/workflows/tract-console.yml"
+  push:
+    branches: [main]
+    paths:
+      - "tract/console/**"
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-render:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: tract/console
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npm run screenshot
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tract-console-1000
+          path: tract/console/artifacts/tract-console-1000.png
+          if-no-files-found: error
