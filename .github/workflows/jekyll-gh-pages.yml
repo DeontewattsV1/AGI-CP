@@ -39,7 +39,7 @@ jobs:
         uses: actions/upload-pages-artifact@v3
 
   # Deployment job
-  deploy:
+  deploy: 'AGI-CP/AGI/CP'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
