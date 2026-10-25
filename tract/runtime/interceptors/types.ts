@@ -1,6 +1,13 @@
 export type InterceptSurface = "git" | "shell" | "http" | "mcp";
 export type InterceptDecision = "ALLOW" | "DENY" | "HOLD";
 
+export interface AuthorizationEvidence {
+  passportVerified: boolean;
+  gatewayDecision: "ALLOW" | "DENY" | "INDETERMINATE";
+  authorizedSubject: string;
+  authorizedCapability: string;
+}
+
 export interface InterceptRequest {
   surface: InterceptSurface;
   agentId: string;
@@ -11,6 +18,7 @@ export interface InterceptRequest {
   operation: string;
   argumentsDigest: string;
   timestamp: string;
+  authorization: AuthorizationEvidence;
 }
 
 export interface InterceptResult {
@@ -25,10 +33,7 @@ export interface RuntimeInterceptor {
   inspect(request: InterceptRequest): Promise<InterceptResult>;
 }
 
-/**
- * Fail-closed composition: every interceptor must explicitly allow.
- * HOLD and DENY never collapse into ALLOW.
- */
+/** Fail closed: every matching interceptor must explicitly allow. */
 export async function inspectAll(
   request: InterceptRequest,
   interceptors: RuntimeInterceptor[],
