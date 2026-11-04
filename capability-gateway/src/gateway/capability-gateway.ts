@@ -12,6 +12,12 @@ import {
   type ImportedAdjudication,
   type PolicySnapshot,
 } from "../auth/issuer-policy.ts";
+import {
+  collectEvidence,
+  decideEvidence,
+  type EvidenceWindow,
+  type Observation,
+} from "../auth/evidence.ts";
 import type {
   Capability,
   CapabilityDecision,
@@ -31,6 +37,8 @@ export interface VerificationContext {
   capabilityRequest?: CapabilityRequest | null;
   policySnapshot?: PolicySnapshot | null;
   importedAdjudication?: ImportedAdjudication | null;
+  evidenceWindow?: EvidenceWindow | null;
+  observations?: Observation[];
   delegation?: Delegation | null;
   capability?: Capability | null;
   requestedScope?: string;
@@ -156,6 +164,21 @@ export async function authorizeCapability(
     }
     if (att.expiresAt !== undefined && now > att.expiresAt) {
       return deny("DEPLOYMENT_ATTESTATION_EXPIRED", envelope, capability.id);
+    }
+  }
+  if (ctx.evidenceWindow) {
+    const slots = collectEvidence(ctx.evidenceWindow, ctx.observations ?? []);
+    const evidence = decideEvidence(slots);
+    if (evidence === "EVIDENCE_FAILED") {
+      return deny("EVIDENCE_FAILED", envelope, capability.id);
+    }
+    if (evidence !== "ok") {
+      return {
+        decision: "INDETERMINATE",
+        reason: "EVIDENCE_UNVERIFIABLE",
+        requestId: envelope.requestId,
+        capabilityId: capability.id,
+      };
     }
   }
   if (ctx.extraVerifier) {
