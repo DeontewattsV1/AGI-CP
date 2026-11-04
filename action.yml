@@ -1,0 +1,68 @@
+name: Publish PR Conductor v2.0.0
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    if: "${{ github.event.head_commit.message == 'release: publish v2.0.0' }}"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out validated v2
+        uses: actions/checkout@v5
+        with:
+          ref: v2
+          fetch-depth: 0
+
+      - name: Revalidate release target
+        run: |
+          set -Eeuo pipefail
+          test -f action.yml
+          grep -Fq 'name: PR Conductor' action.yml
+          grep -Eq '^[[:space:]]*using:[[:space:]]*composite[[:space:]]*$' action.yml
+          grep -Fq 'scripts/pr-conductor.sh' action.yml
+          bash -n scripts/pr-conductor.sh
+          bash -n scripts/create-labels.sh
+          for file in scripts/lib/*.sh; do
+            bash -n "$file"
+          done
+          if grep -R -n -F '`' scripts/lib scripts/pr-conductor.sh; then
+            echo "Legacy shell backticks are forbidden in the runtime engine."
+            exit 1
+          fi
+      - name: Publish immutable v2.0.0 release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -Eeuo pipefail
+          TARGET_SHA="$(git rev-parse HEAD)"
+          if gh release view v2.0.0 --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "v2.0.0 already exists; leaving the immutable release untouched."
+            exit 0
+          fi
+          cat > /tmp/release-notes.md <<'EOF'
+          # PR Conductor v2.0.0
+          First immutable PR Conductor v2 release.
+          Highlights:
+          - policy-driven squash, rebase, and merge-commit selection
+          - branch update/rebase automation
+          - native GitHub stacked-PR handling through github/gh-stack
+          - fork-aware safety controls
+          - Conventional Commit title normalization
+          - one upserted PR status comment
+          - dry-run mode
+          - protected immediate-merge fallback when repository auto-merge is unavailable
+          - root action.yml integrity validation
+          - live-mode canary verified before release
+          The release tag targets the validated v2 branch SHA.
+          EOF
+          gh release create v2.0.0 \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$TARGET_SHA" \
+            --title "PR Conductor v2.0.0" \
+            --notes-file /tmp/release-notes.md \
+            --latest

@@ -3,6 +3,15 @@ import { verifySignature } from "../auth/signature.ts";
 import { scopePermits, validateDelegation } from "../auth/delegation.ts";
 import type { ReplayStore } from "../auth/replay.ts";
 import type { RevocationStore } from "../auth/revocation.ts";
+import {
+  verifyCapabilityRequest,
+  type CapabilityRequest,
+} from "../auth/capability-request.ts";
+import {
+  evaluateIssuerPolicy,
+  type ImportedAdjudication,
+  type PolicySnapshot,
+} from "../auth/issuer-policy.ts";
 import type {
   Capability,
   CapabilityDecision,
@@ -18,6 +27,10 @@ export interface VerificationContext {
   envelope: SignedRequestEnvelope;
   resolvedKey?: string | null;
   issuerRole?: Role;
+  agentKey?: string | null;
+  capabilityRequest?: CapabilityRequest | null;
+  policySnapshot?: PolicySnapshot | null;
+  importedAdjudication?: ImportedAdjudication | null;
   delegation?: Delegation | null;
   capability?: Capability | null;
   requestedScope?: string;
@@ -61,6 +74,18 @@ export async function authorizeCapability(
   if (!envelope.capability || envelope.capability !== capability.id) {
     return deny("AUTHORIZATION_MISSING", envelope, capability.id);
   }
+
+  if (capability.requiresDelegation) {
+    const req = verifyCapabilityRequest(ctx.capabilityRequest, {
+      subject: envelope.subject,
+      capability: capability.id,
+      agentSecret: ctx.agentKey,
+    });
+    if (req !== "ok") {
+      return deny(req, envelope, capability.id);
+    }
+  }
+
   if (capability.requiresSignature) {
     if (!ctx.resolvedKey) {
       return deny("KEY_NOT_RESOLVED", envelope, capability.id);
@@ -70,6 +95,16 @@ export async function authorizeCapability(
     }
     if (!verifySignature(envelope, ctx.resolvedKey)) {
       return deny("INVALID_SIGNATURE", envelope, capability.id);
+    }
+    const policy = evaluateIssuerPolicy({
+      capability,
+      requestedScope: ctx.requestedScope,
+      now,
+      snapshot: ctx.policySnapshot,
+      importedAdjudication: ctx.importedAdjudication,
+    });
+    if (policy !== "ok") {
+      return deny(policy, envelope, capability.id);
     }
   }
   if (Math.abs(now - envelope.timestamp) > skew) {
