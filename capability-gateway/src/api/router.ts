@@ -14,6 +14,41 @@ export interface InvokeBody {
   requestedScope?: string;
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isSha256Signature(value: unknown): value is string {
+  return typeof value === "string" && /^[a-f\d]{64}$/i.test(value);
+}
+
+function isSignedRequestEnvelope(value: unknown): value is SignedRequestEnvelope {
+  return isRecord(value) &&
+    typeof value.requestId === "string" &&
+    typeof value.timestamp === "number" && Number.isFinite(value.timestamp) &&
+    typeof value.issuer === "string" &&
+    typeof value.subject === "string" &&
+    typeof value.capability === "string" &&
+    typeof value.delegationId === "string" &&
+    typeof value.nonce === "string" &&
+    Object.hasOwn(value, "payload") &&
+    isSha256Signature(value.signature);
+}
+
+function isCapabilityRequest(value: unknown): value is CapabilityRequest {
+  return isRecord(value) &&
+    value.message_type === "CAPABILITY_REQUEST" &&
+    value.protocol_version === "0.2.0" &&
+    typeof value.request_id === "string" &&
+    typeof value.subject === "string" &&
+    typeof value.capability === "string" &&
+    (value.scope === undefined || typeof value.scope === "string") &&
+    typeof value.timestamp === "number" && Number.isFinite(value.timestamp) &&
+    typeof value.nonce === "string" &&
+    value.signer_role === "AGENT" &&
+    isSha256Signature(value.signature);
+}
+
 // These inputs must come from server-owned stores and policy evaluation,
 // never from assertions or verification keys supplied in the HTTP body.
 export type AuthorizationInputs = Pick<VerificationContext,
@@ -38,7 +73,9 @@ export async function buildServer(options: ServerOptions = {}) {
       capabilityRequest: incoming?.capabilityRequest,
       requestedScope: incoming?.requestedScope,
     };
-    if (!body?.envelope) {
+    if (!isSignedRequestEnvelope(body.envelope) ||
+      (body.capabilityRequest != null && !isCapabilityRequest(body.capabilityRequest)) ||
+      (body.requestedScope != null && typeof body.requestedScope !== "string")) {
       return reply.code(400).send({ decision: "DENY", reason: "AUTHORIZATION_MISSING" });
     }
     let trusted: AuthorizationInputs | null;
@@ -59,7 +96,7 @@ export async function buildServer(options: ServerOptions = {}) {
         agentKey: trusted.agentKey,
         policySnapshot: trusted.policySnapshot,
         importedAdjudication: trusted.importedAdjudication,
-        delegation: trusted.delegation ?? null,
+        delegation: trusted.delegation?.id === body.envelope.delegationId ? trusted.delegation : null,
         capabilityRequest: body.capabilityRequest ?? null,
         capability: capability ?? null,
         requestedScope: body.requestedScope,
