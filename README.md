@@ -169,7 +169,8 @@ npm test
 
 `buildServer({ resolveAuthorization })` (or `startServer(port, options)`) requires
 an application-provided, trusted authorization resolver for `/plugin/invoke`.
-Without it, invocation fails closed with `403 AUTHORIZATION_MISSING`; health
+For a request containing an envelope, invocation fails closed with
+`403 AUTHORIZATION_MISSING`; health
 and manifest endpoints remain available. The default CLI does not configure a
 resolver and cannot authorize invocations.
 
