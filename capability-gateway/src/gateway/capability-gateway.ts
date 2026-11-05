@@ -18,6 +18,10 @@ import {
   type EvidenceWindow,
   type Observation,
 } from "../auth/evidence.ts";
+import {
+  verifyIssuerProof,
+  type IssuerProof,
+} from "../auth/issuer-proof.ts";
 import type {
   Capability,
   CapabilityDecision,
@@ -39,6 +43,8 @@ export interface VerificationContext {
   importedAdjudication?: ImportedAdjudication | null;
   evidenceWindow?: EvidenceWindow | null;
   observations?: Observation[];
+  issuerProof?: IssuerProof | null;
+  issuerProofKey?: string | null;
   delegation?: Delegation | null;
   capability?: Capability | null;
   requestedScope?: string;
@@ -103,6 +109,15 @@ export async function authorizeCapability(
     }
     if (!verifySignature(envelope, ctx.resolvedKey)) {
       return deny("INVALID_SIGNATURE", envelope, capability.id);
+    }
+    const proof = verifyIssuerProof(ctx.issuerProof, {
+      requestId: envelope.requestId,
+      subject: envelope.subject,
+      capability: capability.id,
+      key: ctx.issuerProofKey ?? ctx.resolvedKey,
+    });
+    if (proof !== "ok") {
+      return deny(proof, envelope, capability.id);
     }
     const policy = evaluateIssuerPolicy({
       capability,
