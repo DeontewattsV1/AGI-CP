@@ -53,7 +53,8 @@ function isCapabilityRequest(value: unknown): value is CapabilityRequest {
 // never from assertions or verification keys supplied in the HTTP body.
 export type AuthorizationInputs = Pick<VerificationContext,
   "resolvedKey" | "issuerRole" | "agentKey" | "policySnapshot" |
-  "importedAdjudication" | "delegation" | "deploymentAttestation">;
+  "importedAdjudication" | "delegation" | "deploymentAttestation" |
+  "issuerProof" | "issuerProofKey">;
 
 export interface ServerOptions {
   resolveAuthorization?: (request: InvokeBody) => Promise<AuthorizationInputs | null>;
@@ -98,6 +99,8 @@ export async function buildServer(options: ServerOptions = {}) {
         importedAdjudication: trusted.importedAdjudication,
         delegation: trusted.delegation?.id === body.envelope.delegationId ? trusted.delegation : null,
         capabilityRequest: body.capabilityRequest ?? null,
+        issuerProof: trusted.issuerProof,
+        issuerProofKey: trusted.issuerProofKey,
         capability: capability ?? null,
         requestedScope: body.requestedScope,
         deploymentAttestation: trusted.deploymentAttestation ?? null,

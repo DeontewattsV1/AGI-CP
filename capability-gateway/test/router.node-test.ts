@@ -4,6 +4,7 @@ import { buildServer, type AuthorizationInputs, type InvokeBody } from "../src/a
 import { signEnvelope } from "../src/auth/signature.ts";
 import { makeCapabilityRequest } from "../src/auth/capability-request.ts";
 import { issuerEvaluation } from "../src/auth/issuer-policy.ts";
+import { makeIssuerProof } from "../src/auth/issuer-proof.ts";
 
 function fixture() {
   const now = Date.now();
@@ -24,6 +25,12 @@ function fixture() {
   const trusted: AuthorizationInputs = {
     resolvedKey: "issuer-test-key", issuerRole: "ISSUER", agentKey: "agent-test-key",
     policySnapshot: issuerEvaluation(now),
+    issuerProof: makeIssuerProof({
+      requestId: envelope.requestId,
+      subject: envelope.subject,
+      capability: envelope.capability,
+      signerRole: "ISSUER",
+    }, "issuer-test-key"),
     delegation: {
       id: "delegation", issuer: "issuer", subject: "agent",
       capabilities: [envelope.capability], scopes: ["tool:bounded:*"],

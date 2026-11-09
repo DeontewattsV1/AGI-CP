@@ -5,6 +5,7 @@ import { authorizeCapability } from "../src/gateway/capability-gateway.ts";
 import { signEnvelope } from "../src/auth/signature.ts";
 import { makeCapabilityRequest } from "../src/auth/capability-request.ts";
 import { issuerEvaluation } from "../src/auth/issuer-policy.ts";
+import { makeIssuerProof } from "../src/auth/issuer-proof.ts";
 import { MemoryReplayStore } from "../src/auth/replay.ts";
 import { getCapability } from "../src/capabilities/registry.ts";
 import type { Delegation, SignedRequestEnvelope } from "../src/capabilities/types.ts";
@@ -39,6 +40,18 @@ function childDelegation(): Delegation {
     expiresAt: now + 60_000,
     revoked: false,
     parentId: "dlg-parent",
+  };
+}
+
+function proof(env: SignedRequestEnvelope) {
+  return {
+    issuerProof: makeIssuerProof({
+      requestId: env.requestId,
+      subject: env.subject,
+      capability: env.capability,
+      signerRole: "ISSUER" as const,
+    }, SECRET),
+    issuerProofKey: SECRET,
   };
 }
 
@@ -81,8 +94,9 @@ describe("REVOCATION lineage", () => {
       issuer_id: "enf-1",
       issuer_role: "ENFORCER",
     }));
+    const env = envelope();
     const result = await authorizeCapability({
-      envelope: envelope(),
+      envelope: env,
       resolvedKey: SECRET,
       issuerRole: "ISSUER",
       delegation: childDelegation(),
@@ -90,7 +104,8 @@ describe("REVOCATION lineage", () => {
       requestedScope: "tool:bounded:write",
       agentKey: AGENT,
       policySnapshot: issuerEvaluation(now),
-      capabilityRequest: agentRequest(envelope()),
+      capabilityRequest: agentRequest(env),
+      ...proof(env),
       now,
     }, { replayStore: new MemoryReplayStore(), revocationStore });
     assert.equal(result.decision, "DENY");
@@ -100,8 +115,9 @@ describe("REVOCATION lineage", () => {
   it("failed request does not burn nonce for a later valid request", async () => {
     const replayStore = new MemoryReplayStore();
     const revocationStore = new MemoryRevocationStore();
+    const env = envelope({ requestId: "req-retry", nonce: "n-retry" });
     const denied = await authorizeCapability({
-      envelope: envelope({ requestId: "req-retry", nonce: "n-retry" }),
+      envelope: env,
       resolvedKey: SECRET,
       issuerRole: "ISSUER",
       delegation: null,
@@ -109,12 +125,13 @@ describe("REVOCATION lineage", () => {
       requestedScope: "tool:bounded:write",
       agentKey: AGENT,
       policySnapshot: issuerEvaluation(now),
-      capabilityRequest: agentRequest(envelope({ requestId: "req-retry", nonce: "n-retry" })),
+      capabilityRequest: agentRequest(env),
+      ...proof(env),
       now,
     }, { replayStore, revocationStore });
     assert.equal(denied.decision, "DENY");
     const allowed = await authorizeCapability({
-      envelope: envelope({ requestId: "req-retry", nonce: "n-retry" }),
+      envelope: env,
       resolvedKey: SECRET,
       issuerRole: "ISSUER",
       delegation: childDelegation(),
@@ -122,7 +139,8 @@ describe("REVOCATION lineage", () => {
       requestedScope: "tool:bounded:write",
       agentKey: AGENT,
       policySnapshot: issuerEvaluation(now),
-      capabilityRequest: agentRequest(envelope({ requestId: "req-retry", nonce: "n-retry" })),
+      capabilityRequest: agentRequest(env),
+      ...proof(env),
       now,
     }, { replayStore, revocationStore });
     assert.equal(allowed.decision, "ALLOW");
