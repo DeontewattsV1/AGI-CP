@@ -4,6 +4,7 @@ import { authorizeCapability } from "../src/gateway/capability-gateway.ts";
 import { signEnvelope } from "../src/auth/signature.ts";
 import { makeCapabilityRequest } from "../src/auth/capability-request.ts";
 import { issuerEvaluation } from "../src/auth/issuer-policy.ts";
+import { makeIssuerProof } from "../src/auth/issuer-proof.ts";
 import { MemoryReplayStore } from "../src/auth/replay.ts";
 import { MemoryRevocationStore } from "../src/auth/revocation.ts";
 import { getCapability } from "../src/capabilities/registry.ts";
@@ -57,8 +58,9 @@ function deps() {
 }
 
 function baseCtx() {
+  const env = envelope();
   return {
-    envelope: envelope(),
+    envelope: env,
     resolvedKey: ISSUER,
     issuerRole: "ISSUER" as const,
     agentKey: AGENT,
@@ -66,6 +68,13 @@ function baseCtx() {
     delegation: delegation(),
     capability: getCapability("agicp.tool.bounded")!,
     requestedScope: "tool:bounded:write",
+    issuerProof: makeIssuerProof({
+      requestId: env.requestId,
+      subject: env.subject,
+      capability: env.capability,
+      signerRole: "ISSUER",
+    }, ISSUER),
+    issuerProofKey: ISSUER,
     now,
   };
 }

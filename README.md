@@ -4,6 +4,8 @@ Artificial General Intelligence Containment Protocol.
 
 This repository is a research standard and a reference enforcement gateway. It does **not** claim to contain arbitrary AGI.
 
+**Author:** Deonté O'dell Watts / GoodShyt Group Inc. (GitHub: DeontewattsV1, ORCID [0009-0005-8586-3650](https://orcid.org/0009-0005-8586-3650))
+
 ## What is specified
 
 - Fail-closed capability authorization
