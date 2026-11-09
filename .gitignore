@@ -1,6 +1,12 @@
 node_modules/
 dist/
+build/
 coverage/
+__pycache__/
+*.py[cod]
+_site/
+.jekyll-cache/
+.audit/
 .DS_Store
 *.log
 .env
