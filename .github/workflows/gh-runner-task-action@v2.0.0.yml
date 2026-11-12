@@ -1,0 +1,23 @@
+- name: Starts a GitHub Self Hosted Runner 
+  # You may pin to the exact commit or the version.
+  # uses: PasseiDireto/gh-runner-task-action@7d7318f18337ad0f66fdb8ae011b97b9c010c756
+  uses: PasseiDireto/gh-runner-task-action@v2.0.0
+  with:
+    # GitHub Personal Access Token used in Runner Registration
+    github_pat: 
+    # The name of the task definition
+    task_definition: # default is gh-runner
+    # The name of the ECS cluster where the task should be placed
+    cluster: 
+    # Whether the action should wait until at least one task is in state RUNNING before finishing
+    wait: # default is true
+    # How many task instances should be triggered
+    task_count: # default is 1
+    # The name of the desired Capacity Provider (attached to this cluster)
+    capacity_provider: # default is gh-runner-automanaged
+    # ARN of the role used to instantiate the task
+    task_role_arn: # optional
+    # ARN of the role used during task execution
+    execution_role_arn: # optional
+    # JSON file (path) with extra configurations
+    task_params_file: # optional, default is task-params.json
