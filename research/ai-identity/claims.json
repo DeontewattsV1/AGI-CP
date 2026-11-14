@@ -1,0 +1,79 @@
+{
+  "review_id": "VSC-AIID-20261114",
+  "date": "2026-11-14",
+  "classification": "CONFIDENTIAL — PROPRIETARY",
+  "source": {
+    "kind": "user_pasted_transcript",
+    "venice_share_id": "7c2b2c9d-d538-4738-8838-b12128e9230d",
+    "independently_authenticated": false,
+    "decryption_material_retained": false
+  },
+  "review_status": "RESEARCH_HOLD",
+  "novelty_promoted": 0,
+  "metadata": {
+    "pi": "Deonté O'dell Watts",
+    "orcid": "0009-0005-8586-3650",
+    "affiliation": "GoodShyt Group Inc.",
+    "ai_assisted": true
+  },
+  "verifications": {
+    "static_source_review": "PASS_LIMITED_TO_PASTED_TEXT",
+    "bch_coset_checker": "PASS_5_LOCAL_TESTS",
+    "hardware_simulation": "NOT_RUN",
+    "rtl_synthesis": "NOT_RUN",
+    "formal_verification": "NOT_RUN",
+    "sta": "NOT_RUN",
+    "puf_characterization": "NOT_RUN",
+    "independent_review": "NOT_RUN"
+  },
+  "claims": [
+    {
+      "id": "AIID-01",
+      "text": "DICE-based hardware identity, remote attestation, EAT/COSE",
+      "class": "ESTABLISHED",
+      "tier": "T1_STANDARDS",
+      "novel": false,
+      "authority": [
+        "TCG DICE",
+        "RFC 9334",
+        "RFC 9711",
+        "RFC 9052"
+      ],
+      "status": "PRIOR_ART_CONFIRMED"
+    },
+    {
+      "id": "AIID-02",
+      "text": "Distinct model artifact, runtime, and per-instance identity are necessary to avoid state collapse",
+      "class": "DERIVED",
+      "tier": "T2",
+      "status": "CONCEPTUAL_ONLY",
+      "falsifier": "Independently prove distinct execution instances share an authenticated state that is permitted to substitute for instance attestation"
+    },
+    {
+      "id": "AIID-03",
+      "text": "Stated primitive narrow-sense BCH(2047,639,t=128) dimension is consistent",
+      "class": "FALSE_AS_STATED",
+      "tier": "T2_DERIVATION",
+      "status": "FALSIFIED_BY_COSET_ENUMERATION",
+      "observed_dimension": 815,
+      "observed_generator_degree": 1232,
+      "falsifier": "Independent generator polynomial from the same alpha^1..alpha^256 roots has degree 1408"
+    },
+    {
+      "id": "AIID-04",
+      "text": "Pasted RTL achieves secure model-rooted attestation",
+      "class": "UNVERIFIED",
+      "tier": "T4",
+      "status": "BLOCKED_CRITICAL_DEFECTS",
+      "falsifier": "Demonstrate a forged quote, invalid PCR policy, key exposure, or altered measurement accepted at independently verified enforcement boundary"
+    },
+    {
+      "id": "AIID-05",
+      "text": "Hardware source is tapeout clean",
+      "class": "UNSUPPORTED",
+      "tier": "T4",
+      "status": "HOLD",
+      "falsifier": "Produce clean multi-corner STA, DFT, formal, synthesis, and silicon characterization evidence"
+    }
+  ]
+}
