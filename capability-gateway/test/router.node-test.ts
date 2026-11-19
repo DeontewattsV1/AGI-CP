@@ -4,6 +4,7 @@ import { buildServer, type AuthorizationInputs, type InvokeBody } from "../src/a
 import { signEnvelope } from "../src/auth/signature.ts";
 import { makeCapabilityRequest } from "../src/auth/capability-request.ts";
 import { issuerEvaluation } from "../src/auth/issuer-policy.ts";
+import { makeIssuerProof } from "../src/auth/issuer-proof.ts";
 
 function fixture() {
   const now = Date.now();
@@ -24,6 +25,12 @@ function fixture() {
   const trusted: AuthorizationInputs = {
     resolvedKey: "issuer-test-key", issuerRole: "ISSUER", agentKey: "agent-test-key",
     policySnapshot: issuerEvaluation(now),
+    issuerProof: makeIssuerProof({
+      requestId: envelope.requestId,
+      subject: envelope.subject,
+      capability: envelope.capability,
+      signerRole: "ISSUER",
+    }, "issuer-test-key"),
     delegation: {
       id: "delegation", issuer: "issuer", subject: "agent",
       capabilities: [envelope.capability], scopes: ["tool:bounded:*"],
@@ -67,6 +74,7 @@ for (const [name, override, expected] of [
   it(`HTTP denies ${name} despite forged body assertions`, async t => {
     const { body, trusted } = fixture();
     const app = await buildServer({ resolveAuthorization: async input => {
+      assert.deepEqual(input, body);
       assert.equal("resolvedKey" in input, false);
       assert.equal("policySnapshot" in input, false);
       return { ...trusted, ...override };
@@ -78,6 +86,18 @@ for (const [name, override, expected] of [
     assert.equal(result.json().reason, expected);
   });
 }
+
+it("HTTP rejects a resolver delegation for a different envelope ID", async t => {
+  const { body, trusted } = fixture();
+  const app = await buildServer({ resolveAuthorization: async () => ({
+    ...trusted,
+    delegation: { ...trusted.delegation!, id: "another-delegation" },
+  }) });
+  t.after(() => app.close());
+  const result = await app.inject({ method: "POST", url: "/plugin/invoke", payload: body });
+  assert.equal(result.statusCode, 403);
+  assert.equal(result.json().reason, "DELEGATION_NOT_FOUND");
+});
 
 it("HTTP denies resolver failure without exposing exception details", async t => {
   const { body } = fixture();
@@ -96,4 +116,37 @@ it("HTTP denies a missing capability request", async t => {
   const result = await app.inject({ method: "POST", url: "/plugin/invoke", payload: body });
   assert.equal(result.statusCode, 403);
   assert.equal(result.json().reason, "CAPABILITY_REQUEST_MISSING");
+});
+
+it("HTTP rejects malformed authorization fields before invoking the resolver", async t => {
+  const { body } = fixture();
+  let resolverCalled = false;
+  const app = await buildServer({ resolveAuthorization: async () => {
+    resolverCalled = true;
+    return null;
+  } });
+  t.after(() => app.close());
+  const malformed = {
+    ...body,
+    capabilityRequest: { ...body.capabilityRequest!, signature: "é".repeat(64) },
+  };
+  const result = await app.inject({ method: "POST", url: "/plugin/invoke", payload: malformed });
+  assert.equal(result.statusCode, 400);
+  assert.deepEqual(result.json(), { decision: "DENY", reason: "AUTHORIZATION_MISSING" });
+  assert.equal(resolverCalled, false);
+});
+
+it("HTTP rejects malformed envelopes before invoking the resolver", async t => {
+  const { body } = fixture();
+  let resolverCalled = false;
+  const app = await buildServer({ resolveAuthorization: async () => {
+    resolverCalled = true;
+    return null;
+  } });
+  t.after(() => app.close());
+  const malformed = { ...body, envelope: { ...body.envelope, timestamp: "not-a-number" } };
+  const result = await app.inject({ method: "POST", url: "/plugin/invoke", payload: malformed });
+  assert.equal(result.statusCode, 400);
+  assert.deepEqual(result.json(), { decision: "DENY", reason: "AUTHORIZATION_MISSING" });
+  assert.equal(resolverCalled, false);
 });

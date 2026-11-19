@@ -1,0 +1,17 @@
+name: Start GitHub Self Hosted Runner
+
+# This workflow is intentionally triggered manually to avoid starting infrastructure on every push.
+on:
+  workflow_dispatch:
+
+jobs:
+  start-runner:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Start a GitHub Self Hosted Runner
+        uses: PasseiDireto/gh-runner-task-action@v2.0.0
+        with:
+          # Use the repository GITHUB_TOKEN by default so a human maintainer does not need to add a PAT.
+          github_pat: ${{ secrets.GITHUB_TOKEN }}

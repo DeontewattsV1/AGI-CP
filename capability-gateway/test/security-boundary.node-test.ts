@@ -3,6 +3,8 @@ import { describe, it } from "node:test";
 import { authorizeCapability } from "../src/gateway/capability-gateway.ts";
 import { issuerEvaluation } from "../src/auth/issuer-policy.ts";
 import { signEnvelope } from "../src/auth/signature.ts";
+import { makeCapabilityRequest } from "../src/auth/capability-request.ts";
+import { makeIssuerProof } from "../src/auth/issuer-proof.ts";
 import { MemoryReplayStore } from "../src/auth/replay.ts";
 import { MemoryRevocationStore } from "../src/auth/revocation.ts";
 import { getCapability } from "../src/capabilities/registry.ts";
@@ -10,6 +12,7 @@ import { combineDecisions } from "../src/capabilities/policy.ts";
 import type { Delegation, SignedRequestEnvelope } from "../src/capabilities/types.ts";
 
 const SECRET = "test-issuer-secret";
+const AGENT = "test-agent-secret";
 const now = Date.now();
 
 function cap(id = "agicp.tool.bounded") {
@@ -51,15 +54,33 @@ function stores() {
 }
 
 async function authorize(over: Record<string, unknown> = {}) {
+  const env = (over.envelope as SignedRequestEnvelope) ?? envelope();
   return authorizeCapability(
     {
-      envelope: (over.envelope as SignedRequestEnvelope) ?? envelope(),
+      envelope: env,
       resolvedKey: (over.resolvedKey as string | null | undefined) === undefined ? SECRET : (over.resolvedKey as string | null),
       issuerRole: (over.issuerRole as "ISSUER") ?? "ISSUER",
       delegation: ("delegation" in over ? over.delegation : delegation()) as Delegation | null,
       capability: ("capability" in over ? over.capability : cap()) as ReturnType<typeof cap> | null,
+      capabilityRequest: ("capabilityRequest" in over ? over.capabilityRequest : makeCapabilityRequest({
+        request_id: env.requestId,
+        subject: env.subject || "agent-A17",
+        capability: env.capability || "agicp.tool.bounded",
+        timestamp: now,
+        nonce: "agent-req-nonce",
+        signer_role: "AGENT",
+      }, AGENT)) as never,
+      agentKey: (over.agentKey as string | undefined) ?? AGENT,
+      policySnapshot: ("policySnapshot" in over ? over.policySnapshot : issuerEvaluation(now)) as never,
+      importedAdjudication: ("importedAdjudication" in over ? over.importedAdjudication : null) as never,
+      issuerProof: ("issuerProof" in over ? over.issuerProof : makeIssuerProof({
+        requestId: env.requestId,
+        subject: env.subject || "agent-A17",
+        capability: env.capability || "agicp.tool.bounded",
+        signerRole: "ISSUER",
+      }, SECRET)) as never,
+      issuerProofKey: (over.issuerProofKey as string | undefined) ?? SECRET,
       requestedScope: (over.requestedScope as string) ?? "tool:bounded:write",
-      policySnapshot: issuerEvaluation(now),
       now,
       deploymentAttestation: (over.deploymentAttestation as never) ?? null,
       extraVerifier: over.extraVerifier as undefined | (() => "ALLOW" | "DENY" | "INDETERMINATE"),
